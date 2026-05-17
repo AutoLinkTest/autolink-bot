@@ -28,19 +28,19 @@ keep_alive()
 # CONFIG
 # =========================
 
-TELEGRAM_TOKEN = "TON_TOKEN_ICI"
+TELEGRAM_TOKEN = "8962293821:AAH-TmXsuQJPmwNpK2HcW29N7voNjVHaJAA"
 CHAT_ID = "7729357640"
 
 BOT = Bot(token=TELEGRAM_TOKEN)
 
 # =========================
-# RECHERCHE LEBONCOIN
+# RECHERCHE
 # =========================
 
 URL_RSS = "https://www.leboncoin.fr/recherche?category=2&text=renault+peugeot+citroen+dacia&price=min-1000"
 
 # =========================
-# MOTS INTERDITS
+# FILTRES
 # =========================
 
 MOTS_INTERDITS = [
@@ -53,12 +53,14 @@ MOTS_INTERDITS = [
 ]
 
 annonces_vues = set()
+dernier_heartbeat = ""
 
 # =========================
-# ENVOI TELEGRAM
+# TELEGRAM
 # =========================
 
 async def envoyer_message_async(message):
+
     await BOT.send_message(
         chat_id=CHAT_ID,
         text=message
@@ -67,10 +69,15 @@ async def envoyer_message_async(message):
 def envoyer_message(message):
 
     try:
-        asyncio.run(envoyer_message_async(message))
+
+        asyncio.run(
+            envoyer_message_async(message)
+        )
+
         print("✅ Message envoyé")
 
     except Exception as e:
+
         print(e)
 
 # =========================
@@ -89,7 +96,7 @@ def annonce_valide(titre):
     return True
 
 # =========================
-# VERIFICATION ANNONCES
+# SCAN ANNONCES
 # =========================
 
 def verifier_annonces():
@@ -122,18 +129,41 @@ def verifier_annonces():
         envoyer_message(message)
 
 # =========================
+# HEARTBEAT
+# =========================
+
+def verifier_heartbeat():
+
+    global dernier_heartbeat
+
+    heure = time.strftime("%H:%M")
+
+    if heure == "09:00" and dernier_heartbeat != heure:
+
+        envoyer_message("✅ AutoLink Bot toujours actif")
+
+        dernier_heartbeat = heure
+
+# =========================
 # DEMARRAGE
 # =========================
 
 envoyer_message("🤖 AutoLink Bot démarré")
 
+# =========================
+# BOUCLE PRINCIPALE
+# =========================
+
 while True:
 
     try:
+
         verifier_annonces()
+        verifier_heartbeat()
 
     except Exception as e:
+
         print(e)
 
-    # scan toutes les 15 minutes
+    # Scan toutes les 15 minutes
     time.sleep(900)
