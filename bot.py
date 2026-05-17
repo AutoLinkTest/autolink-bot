@@ -1,19 +1,13 @@
 from flask import Flask
 from threading import Thread
 import asyncio
-import time
-import feedparser
 from telegram import Bot
-
-# =========================
-# SERVEUR FLASK
-# =========================
 
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "AutoLink Bot actif"
+    return "Bot actif"
 
 def run():
     app.run(host='0.0.0.0', port=10000)
@@ -24,102 +18,17 @@ def keep_alive():
 
 keep_alive()
 
-# =========================
-# CONFIG
-# =========================
-
 TELEGRAM_TOKEN = "8962293821:AAH-TmXsuQJPmwNpK2HcW29N7voNjVHaJAA"
 CHAT_ID = "7729357640"
 
 BOT = Bot(token=TELEGRAM_TOKEN)
 
-URL_RSS = "https://www.leboncoin.fr/recherche?category=2&text=renault+peugeot+citroen+dacia&price=min-1000"
+async def envoyer():
+    await BOT.send_message(
+        chat_id=CHAT_ID,
+        text="🚗 TEST AUTOLINK BOT OK"
+    )
 
-MOTS_INTERDITS = [
-    "pour pièces",
-    "pour piece",
-    "épave",
-    "moteur hs",
-    "hs",
-    "casse"
-]
+asyncio.run(envoyer())
 
-annonces_vues = set()
-
-# =========================
-# TELEGRAM
-# =========================
-
-def envoyer_message(message):
-    try:
-        asyncio.run(
-            BOT.send_message(
-                chat_id=CHAT_ID,
-                text=message
-            )
-        )
-        print("✅ Message envoyé")
-    except Exception as e:
-        print(e)
-
-# =========================
-# FILTRES
-# =========================
-
-def annonce_valide(titre):
-
-    titre_lower = titre.lower()
-
-    for mot in MOTS_INTERDITS:
-        if mot in titre_lower:
-            return False
-
-    return True
-
-# =========================
-# SCRAPER
-# =========================
-
-def verifier_annonces():
-
-    print("🔍 Scan en cours...")
-
-    feed = feedparser.parse(URL_RSS)
-
-    for entry in feed.entries:
-
-        titre = entry.title
-        lien = entry.link
-
-        if lien in annonces_vues:
-            continue
-
-        annonces_vues.add(lien)
-
-        if not annonce_valide(titre):
-            continue
-
-        message = f"""
-🚗 Nouvelle annonce
-
-{titre}
-
-🔗 {lien}
-"""
-
-        envoyer_message(message)
-
-# =========================
-# MAIN
-# =========================
-
-envoyer_message("🤖 AutoLink Bot démarré")
-
-while True:
-
-    try:
-        verifier_annonces()
-    except Exception as e:
-        print(e)
-
-    time.sleep(900)
+print("Message envoyé")
