@@ -1,11 +1,19 @@
 from flask import Flask
 from threading import Thread
+import asyncio
+import time
+import feedparser
+from telegram import Bot
+
+# =========================
+# SERVEUR FLASK
+# =========================
 
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot actif"
+    return "AutoLink Bot actif"
 
 def run():
     app.run(host='0.0.0.0', port=10000)
@@ -16,12 +24,6 @@ def keep_alive():
 
 keep_alive()
 
-import time
-import requests
-import feedparser
-from bs4 import BeautifulSoup
-from telegram import Bot
-
 # =========================
 # CONFIG
 # =========================
@@ -31,7 +33,7 @@ CHAT_ID = "7729357640"
 
 BOT = Bot(token=TELEGRAM_TOKEN)
 
-PRIX_MAX = 1000
+URL_RSS = "https://www.leboncoin.fr/recherche?category=2&text=renault+peugeot+citroen+dacia&price=min-1000"
 
 MOTS_INTERDITS = [
     "pour pièces",
@@ -42,8 +44,6 @@ MOTS_INTERDITS = [
     "casse"
 ]
 
-URL_RSS = "https://www.leboncoin.fr/recherche?category=2&text=renault+peugeot+citroen+dacia&price=min-1000"
-
 annonces_vues = set()
 
 # =========================
@@ -52,8 +52,13 @@ annonces_vues = set()
 
 def envoyer_message(message):
     try:
-        BOT.send_message(chat_id=CHAT_ID, text=message)
-        print("Message envoyé")
+        asyncio.run(
+            BOT.send_message(
+                chat_id=CHAT_ID,
+                text=message
+            )
+        )
+        print("✅ Message envoyé")
     except Exception as e:
         print(e)
 
@@ -62,6 +67,7 @@ def envoyer_message(message):
 # =========================
 
 def annonce_valide(titre):
+
     titre_lower = titre.lower()
 
     for mot in MOTS_INTERDITS:
@@ -76,7 +82,7 @@ def annonce_valide(titre):
 
 def verifier_annonces():
 
-    print("Scan en cours...")
+    print("🔍 Scan en cours...")
 
     feed = feedparser.parse(URL_RSS)
 
